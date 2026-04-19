@@ -226,19 +226,27 @@ function cl(){ return DB.clientes[clienteActivo]; }
 function genId(pre){ return pre+"-"+Date.now().toString(36).toUpperCase(); }
 
 // ── API ──────────────────────────────────────────────────────────────────────
-function jsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cb = "crm_cb_" + Date.now();
-    const script = document.createElement("script");
-    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
-    script.onerror = () => reject(new Error("JSONP error"));
-    script.src = url + "&callback=" + cb;
-    document.body.appendChild(script);
-  });
-}
-async function apiGet(hoja){
-  const d = await jsonp(API+"?accion=leer&hoja="+hoja);
-  return d.filas || [];
+async function apiGet(hoja) {
+  // Intenta fetch directo primero (funciona desde HTTPS como Vercel)
+  try {
+    const url = API + "?accion=leer&hoja=" + hoja;
+    const r = await fetch(url, { redirect: "follow" });
+    const text = await r.text();
+    // Limpia JSONP wrapper si viene con callback
+    const clean = text.replace(/^[a-zA-Z_][a-zA-Z0-9_]*\(/, "").replace(/\);?$/, "");
+    const d = JSON.parse(clean);
+    return d.filas || [];
+  } catch(e1) {
+    // Fallback: JSONP
+    return new Promise((resolve) => {
+      const cb = "crm_" + Date.now();
+      const s = document.createElement("script");
+      window[cb] = (d) => { delete window[cb]; s.remove(); resolve(d.filas || []); };
+      s.onerror = () => { s.remove(); resolve([]); };
+      s.src = API + "?accion=leer&hoja=" + hoja + "&callback=" + cb;
+      document.head.appendChild(s);
+    });
+  }
 }
 async function apiPost(accion, hoja, datos, id){
   const body = { accion, hoja, datos };
