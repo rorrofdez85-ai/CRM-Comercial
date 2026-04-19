@@ -226,20 +226,62 @@ function cl(){ return DB.clientes[clienteActivo]; }
 function genId(pre){ return pre+"-"+Date.now().toString(36).toUpperCase(); }
 
 // ── API ──────────────────────────────────────────────────────────────────────
-async function apiGet(hoja) {
-  const r = await fetch(API + "?accion=leer&hoja=" + hoja);
-  const d = await r.json();
-  return d.filas || [];
+async function leerJsonSeguro(response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (error) {
+    throw new Error("La API no devolvio JSON valido");
+  }
 }
+
+async function apiGet(hoja) {
+  const url = `${API}?accion=leer&hoja=${encodeURIComponent(hoja)}`;
+  console.log("[frontend] GET", url);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { "Accept": "application/json" }
+  });
+
+  const data = await leerJsonSeguro(response);
+
+  if (!response.ok) {
+    console.error("[frontend] Error GET", { hoja, status: response.status, data });
+    throw new Error(data?.error || `Error ${response.status} al leer ${hoja}`);
+  }
+
+  if (!Array.isArray(data.filas)) {
+    console.error("[frontend] Formato inesperado", { hoja, data });
+    throw new Error(`La hoja ${hoja} no devolvio un arreglo en "filas"`);
+  }
+
+  return data.filas;
+}
+
 async function apiPost(accion, hoja, datos, id){
   const body = { accion, hoja, datos };
   if(id) body.id = id;
-  const r = await fetch(API, {
+
+  console.log("[frontend] POST", { accion, hoja, id: id || null });
+
+  const response = await fetch(API, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
     body: JSON.stringify(body)
   });
-  return await r.json();
+
+  const data = await leerJsonSeguro(response);
+
+  if (!response.ok) {
+    console.error("[frontend] Error POST", { accion, hoja, status: response.status, data });
+    throw new Error(data?.error || `Error ${response.status} al guardar en ${hoja}`);
+  }
+
+  return data;
 }
 
 async function sincronizar(){
@@ -258,8 +300,9 @@ async function sincronizar(){
     if(vistaActual==="clientes") renderClientes();
     if(vistaActual==="ficha" && clienteActivo!==null) renderFicha();
   } catch(e) {
+    console.error("[frontend] sincronizar error", e);
     document.getElementById("sync-status").textContent = "error sync";
-    console.error(e);
+    alert("No se pudieron cargar los datos: " + e.message);
   }
   cargando = false;
 }
