@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Comercial</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F4F0;
+  --surface: #FFFFFF;
+  --surface2: #EFEFEB;
+  --border: #E2E0D8;
+  --border2: #CCCAB8;
+  --text: #1A1A18;
+  --text2: #6B6960;
+  --text3: #A8A69A;
+  --accent: #2563EB;
+  --accent-bg: #EFF6FF;
+  --green: #16A34A;
+  --green-bg: #F0FDF4;
+  --amber: #D97706;
+  --amber-bg: #FFFBEB;
+  --red: #DC2626;
+  --red-bg: #FEF2F2;
+  --purple: #7C3AED;
+  --purple-bg: #F5F3FF;
+  --teal: #0F766E;
+  --teal-bg: #F0FDFA;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+.app { display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
+.sidebar-logo h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.sidebar-logo p { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: "DM Mono", monospace; }
+.sidebar-nav { padding: 12px 10px; flex: 1; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all .15s; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--text); color: #fff; }
+.nav-icon { width: 16px; height: 16px; opacity: .7; }
+.nav-item.active .nav-icon { opacity: 1; }
+.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
+.sync-btn { width: 100%; padding: 8px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-family: "DM Sans", sans-serif; font-weight: 500; transition: all .15s; }
+.sync-btn:hover { background: var(--border); color: var(--text); }
+.sync-status { font-size: 11px; color: var(--text3); text-align: center; margin-top: 6px; font-family: "DM Mono", monospace; }
+
+/* MAIN */
+.main { margin-left: 220px; flex: 1; padding: 28px 32px; max-width: 1100px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.card-sm { padding: 14px 18px; }
+.card:hover { border-color: var(--border2); }
+
+/* MÉTRICAS */
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+.metric-val { font-size: 26px; font-weight: 600; letter-spacing: -1px; font-family: "DM Mono", monospace; }
+.metric-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+/* ALERTAS */
+.alerta { border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.alerta-r { background: var(--red-bg); border-left: 3px solid var(--red); }
+.alerta-a { background: var(--amber-bg); border-left: 3px solid var(--amber); }
+.alerta-v { background: var(--green-bg); border-left: 3px solid var(--green); }
+.alerta-b { background: var(--accent-bg); border-left: 3px solid var(--accent); }
+.alerta-title { font-weight: 600; font-size: 13px; }
+.alerta-sub { font-size: 12px; opacity: .8; margin-top: 2px; }
+
+/* BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.b-green { background: var(--green-bg); color: var(--green); }
+.b-red { background: var(--red-bg); color: var(--red); }
+.b-amber { background: var(--amber-bg); color: var(--amber); }
+.b-blue { background: var(--accent-bg); color: var(--accent); }
+.b-purple { background: var(--purple-bg); color: var(--purple); }
+.b-teal { background: var(--teal-bg); color: var(--teal); }
+.b-gray { background: var(--surface2); color: var(--text2); }
+
+/* BOTONES */
+.btn { padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: "DM Sans", sans-serif; transition: all .15s; }
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { opacity: .85; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { color: var(--red); border-color: #FCA5A5; }
+.btn-danger:hover { background: var(--red-bg); }
+
+/* INPUTS */
+label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 12px; font-weight: 500; }
+input, select, textarea { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: "DM Sans", sans-serif; transition: border .15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { resize: vertical; min-height: 64px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* TABLA */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { text-align: left; color: var(--text3); font-weight: 500; padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--bg); }
+
+/* CLIENTE HEADER */
+.cl-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+.cl-name { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+.cl-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--text2); }
+
+/* TABS */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); width: fit-content; }
+.tab { padding: 6px 16px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; color: var(--text2); border: none; background: none; font-family: "DM Sans", sans-serif; transition: all .15s; white-space: nowrap; }
+.tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+/* ACCION CHIPS */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; background: none; color: var(--text2); font-family: "DM Sans", sans-serif; transition: all .15s; }
+.chip:hover { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* MODAL */
+.modal-wrap { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+.modal-wrap.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 580px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* SECCIÓN */
+.sec { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 8px; }
+.row-flex { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.empty { color: var(--text3); text-align: center; padding: 32px 0; font-size: 13px; }
+
+/* CLIENTE LISTA */
+.cl-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.cl-item:hover { border-color: var(--border2); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+/* LOADING */
+.loading { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; padding: 20px 0; }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .sidebar { width: 56px; }
+  .sidebar-logo, .nav-item span, .sync-btn span, .sidebar-logo p { display: none; }
+  .main { margin-left: 56px; padding: 16px; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>CRM Comercial</h1>
+    <p>v1.0 · Google Sheets</p>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="irVista('hoy',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="13" rx="2"/><path d="M5 1v2M11 1v2M1 6h14"/></svg>
+      <span>Vista del día</span>
+    </button>
+    <button class="nav-item" onclick="irVista('clientes',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      <span>Clientes</span>
+    </button>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="sync-btn" onclick="sincronizar()"><span>↻ Sincronizar</span></button>
+    <div class="sync-status" id="sync-status">no sincronizado</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div id="vista-hoy"></div>
+  <div id="vista-clientes" style="display:none"></div>
+  <div id="vista-ficha" style="display:none"></div>
+</main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-wrap" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title"></span>
+      <button class="btn btn-sm" onclick="cerrarModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwSqIjKfTHeN-NPORLCxl2cdhdA7Z6aM7coNxQUBVjIfURJPbQ-x8NAyf2eIaq0WLXzoA/exec";
+
+let DB = { clientes:[], interacciones:[], reclamos:[], cobranza:[], cheques:[], pendientes:[] };
+let vistaActual = "hoy";
+let clienteActivo = null;
+let tabFicha = "resumen";
+let modoModal = null;
+let idxModal = null;
+let cargando = false;
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+function hoy(){ return new Date().toISOString().split("T")[0]; }
+function dd(f){ if(!f) return null; const d=new Date(f); d.setHours(0,0,0,0); const h=new Date(); h.setHours(0,0,0,0); return Math.round((d-h)/864e5); }
+function fp(f){ if(!f||f==="") return "—"; try{ const[y,m,d]=String(f).split("-"); return d+"/"+m+"/"+y; }catch(e){ return f; } }
+function clp(v){ return "$"+Math.round(+v||0).toLocaleString("es-CL"); }
+function cl(){ return DB.clientes[clienteActivo]; }
+function genId(pre){ return pre+"-"+Date.now().toString(36).toUpperCase(); }
+
+// ── API ──────────────────────────────────────────────────────────────────────
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = "crm_cb_" + Date.now();
+    const script = document.createElement("script");
+    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
+    script.onerror = () => reject(new Error("JSONP error"));
+    script.src = url + "&callback=" + cb;
+    document.body.appendChild(script);
+  });
+}
+async function apiGet(hoja){
+  const d = await jsonp(API+"?accion=leer&hoja="+hoja);
+  return d.filas || [];
+}
+async function apiPost(accion, hoja, datos, id){
+  const body = { accion, hoja, datos };
+  if(id) body.id = id;
+  const r = await fetch(API, { method:"POST", body: JSON.stringify(body) });
+  return await r.json();
+}
+
+async function sincronizar(){
+  document.getElementById("sync-status").textContent = "sincronizando...";
+  cargando = true;
+  try {
+    const [cl,in_,re,co,ch,pe] = await Promise.all([
+      apiGet("clientes"), apiGet("interacciones"), apiGet("reclamos"),
+      apiGet("cobranza"), apiGet("cheques"), apiGet("pendientes")
+    ]);
+    DB.clientes = cl; DB.interacciones = in_; DB.reclamos = re;
+    DB.cobranza = co; DB.cheques = ch; DB.pendientes = pe;
+    const ahora = new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});
+    document.getElementById("sync-status").textContent = "sync "+ahora;
+    if(vistaActual==="hoy") renderHoy();
+    if(vistaActual==="clientes") renderClientes();
+    if(vistaActual==="ficha" && clienteActivo!==null) renderFicha();
+  } catch(e) {
+    document.getElementById("sync-status").textContent = "error sync";
+    console.error(e);
+  }
+  cargando = false;
+}
+
+// ── NAVEGACIÓN ───────────────────────────────────────────────────────────────
+function irVista(v, btn){
+  vistaActual = v;
+  document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  ["hoy","clientes","ficha"].forEach(x=>document.getElementById("vista-"+x).style.display="none");
+  document.getElementById("vista-"+v).style.display="block";
+  if(v==="hoy") renderHoy();
+  if(v==="clientes") renderClientes();
+}
+
+function abrirFicha(id){
+  clienteActivo = DB.clientes.findIndex(c=>c["ID Cliente"]===id);
+  ["hoy","clientes","ficha"].forEach(x=>document.getElementById("vista-"+x).style.display="none");
+  document.getElementById("vista-ficha").style.display="block";
+  vistaActual="ficha";
+  tabFicha="resumen";
+  renderFicha();
+}
+
+function volverDesde(){
+  clienteActivo=null;
+  irVista("clientes", document.querySelector(".nav-item:nth-child(2)"));
+}
+
+// ── VISTA DEL DÍA ────────────────────────────────────────────────────────────
+function renderHoy(){
+  const fecha = new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long"});
+  let vis_venc=[], vis_hoy=[], vis_prox=[], cob_hoy=[], pend_urg=[];
+
+  DB.clientes.forEach(c=>{
+    const dv = dd(c["Próxima Visita"]);
+    if(dv!==null && dv<0) vis_venc.push(c);
+    else if(dv===0) vis_hoy.push(c);
+    else if(dv!==null && dv<=5) vis_prox.push({c,dv});
+  });
+  DB.cobranza.forEach(a=>{
+    if(a["Estado"]==="Pendiente"){
+      const da=dd(a["Fecha"]);
+      if(da!==null && da<=0) cob_hoy.push(a);
+    }
+  });
+  DB.pendientes.forEach(p=>{
+    if(p["Estado"]==="Pendiente"){
+      const dp=dd(p["Fecha Límite"]);
+      if(dp!==null && dp<=1) pend_urg.push({p,dp});
+    }
+  });
+  DB.cheques.forEach(ch=>{
+    if(ch["Estado"]==="Por retirar"){
+      const dc=dd(ch["Fecha Retiro"]);
+      if(dc!==null && dc<=2) cob_hoy.push({...ch, "Tipo de Acción":"Retirar cheque", "Fecha":ch["Fecha Retiro"], "Nombre Cliente":ch["Nombre Cliente"], "Detalle":ch["N° Cheque"]+" · "+clp(ch["Monto ($)"])+" · "+ch["Banco"]});
+    }
+  });
+
+  const total = vis_venc.length+vis_hoy.length+cob_hoy.length+pend_urg.length;
+  let h = `<div class="page-header"><div><div class="page-title">Vista del día</div><div class="page-sub" style="text-transform:capitalize">${fecha}</div></div>
+    <button class="btn btn-primary" onclick="sincronizar()">↻ Actualizar</button></div>`;
+
+  // métricas
+  h += `<div class="metrics-grid">
+    <div class="metric-card"><div class="metric-val">${vis_venc.length+vis_hoy.length}</div><div class="metric-label">Visitas urgentes</div></div>
+    <div class="metric-card"><div class="metric-val">${cob_hoy.length}</div><div class="metric-label">Cobranza hoy</div></div>
+    <div class="metric-card"><div class="metric-val">${pend_urg.length}</div><div class="metric-label">Pendientes urgentes</div></div>
+    <div class="metric-card"><div class="metric-val">${DB.clientes.length}</div><div class="metric-label">Clientes totales</div></div>
+  </div>`;
+
+  if(total===0 && vis_prox.length===0){
+    h+=`<div class="card" style="text-align:center;padding:40px;color:var(--text3)">Todo al día. Sin tareas urgentes para hoy.</div>`;
+    document.getElementById("vista-hoy").innerHTML=h; return;
+  }
+
+  if(vis_venc.length){
+    h+=`<div class="sec" style="color:var(--red)">Visitas vencidas (${vis_venc.length})</div>`;
+    vis_venc.forEach(c=>{
+      const d=dd(c["Próxima Visita"]);
+      h+=`<div class="alerta alerta-r"><div><div class="alerta-title">${c["Nombre Empresa"]}</div><div class="alerta-sub">${c["Contacto Principal"]} · ${c["Teléfono"]} · hace ${Math.abs(d)} día(s)</div></div>
+      <button class="btn btn-sm" onclick="abrirFicha('${c["ID Cliente"]}')">Ver →</button></div>`;
+    });
+  }
+  if(vis_hoy.length){
+    h+=`<div class="sec" style="color:var(--amber)">Visitar hoy (${vis_hoy.length})</div>`;
+    vis_hoy.forEach(c=>{
+      h+=`<div class="alerta alerta-a"><div><div class="alerta-title">${c["Nombre Empresa"]}</div><div class="alerta-sub">${c["Contacto Principal"]} · ${c["Teléfono"]} · ${c["Dirección"]}</div></div>
+      <button class="btn btn-sm" onclick="abrirFicha('${c["ID Cliente"]}')">Ver →</button></div>`;
+    });
+  }
+  if(cob_hoy.length){
+    h+=`<div class="sec" style="color:var(--accent)">Cobranza para hoy (${cob_hoy.length})</div>`;
+    cob_hoy.forEach(a=>{
+      h+=`<div class="alerta alerta-b"><div><div class="alerta-title">${a["Tipo de Acción"]} — ${a["Nombre Cliente"]}</div><div class="alerta-sub">${a["Detalle"]||""}</div></div>
+      <button class="btn btn-sm" onclick="abrirFicha('${getIdCliente(a["Nombre Cliente"])}')">Ver →</button></div>`;
+    });
+  }
+  if(pend_urg.length){
+    h+=`<div class="sec">Pendientes urgentes (${pend_urg.length})</div>`;
+    pend_urg.forEach(({p,dp})=>{
+      const cls=dp<0?"b-red":dp===0?"b-amber":"b-gray";
+      h+=`<div class="card card-sm row-flex"><div><div style="font-weight:600;font-size:13px">${p["Descripción"]}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px">${p["Nombre Cliente"]} · ${p["Origen"]}</div></div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="badge ${cls}">${dp<0?Math.abs(dp)+"d venc.":dp===0?"hoy":"mañana"}</span>
+      <button class="btn btn-sm" onclick="abrirFicha('${getIdCliente(p["Nombre Cliente"])}')">Ver →</button></div></div>`;
+    });
+  }
+  if(vis_prox.length){
+    h+=`<div class="sec">Próximas visitas</div>`;
+    vis_prox.forEach(({c,dv})=>{
+      h+=`<div class="card card-sm row-flex"><div><span class="badge b-green" style="margin-right:8px">en ${dv}d</span><strong>${c["Nombre Empresa"]}</strong> · ${fp(c["Próxima Visita"])}</div>
+      <button class="btn btn-sm" onclick="abrirFicha('${c["ID Cliente"]}')">Ver →</button></div>`;
+    });
+  }
+  document.getElementById("vista-hoy").innerHTML = h;
+}
+
+function getIdCliente(nombre){
+  const c = DB.clientes.find(c=>c["Nombre Empresa"]===nombre);
+  return c ? c["ID Cliente"] : "";
+}
+
+// ── LISTA CLIENTES ───────────────────────────────────────────────────────────
+function renderClientes(){
+  let h=`<div class="page-header"><div class="page-title">Clientes</div>
+    <button class="btn btn-primary" onclick="abrirModal('cliente',null)">+ Nuevo cliente</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" id="busq" placeholder="Buscar..." style="flex:1;max-width:280px" oninput="renderClientes()">
+      <select id="ftipo" onchange="renderClientes()"><option value="">Todos</option><option>Activo</option><option>Caído</option><option>Potencial</option></select>
+    </div>`;
+  const busq=(document.getElementById("busq")?.value||"").toLowerCase();
+  const ftipo=document.getElementById("ftipo")?.value||"";
+  const lista=DB.clientes.filter(c=>{
+    const m=c["Nombre Empresa"]?.toLowerCase().includes(busq)||(c["Zona / Ruta"]||"").toLowerCase().includes(busq);
+    const t=ftipo?c["Tipo Cliente"]===ftipo:true;
+    return m&&t;
+  });
+  if(!lista.length){h+=`<div class="card"><div class="empty">Sin resultados.</div></div>`;document.getElementById("vista-clientes").innerHTML=h;return;}
+  lista.forEach(c=>{
+    const dv=dd(c["Próxima Visita"]);
+    const tipoCls={Activo:"b-green",Caído:"b-red",Potencial:"b-blue"}[c["Tipo Cliente"]]||"b-gray";
+    const relCls={Alto:"b-teal",Medio:"b-amber",Bajo:"b-gray"}[c["Nivel Relación"]]||"b-gray";
+    const vBadge=dv===null?"":dv<0?`<span class="badge b-red">vencida ${Math.abs(dv)}d</span>`:dv===0?`<span class="badge b-amber">hoy</span>`:dv<=5?`<span class="badge b-green">en ${dv}d</span>`:"";
+    const pends=DB.pendientes.filter(p=>p["Nombre Cliente"]===c["Nombre Empresa"]&&p["Estado"]==="Pendiente").length;
+    const recs=DB.reclamos.filter(r=>r["Nombre Cliente"]===c["Nombre Empresa"]&&r["Estado"]!=="Cerrado").length;
+    h+=`<div class="cl-item" onclick="abrirFicha('${c["ID Cliente"]}')">
+      <div class="row-flex"><div style="flex:1">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+          <strong style="font-size:14px">${c["Nombre Empresa"]}</strong>
+          <span class="badge ${tipoCls}">${c["Tipo Cliente"]}</span>
+          <span class="badge ${relCls}">Rel. ${c["Nivel Relación"]}</span>
+          ${vBadge}
+        </div>
+        <div style="font-size:12px;color:var(--text3)">${c["Contacto Principal"]||""} · ${c["Zona / Ruta"]||""} · ${c["Forma de Pago"]||""}
+        ${pends>0?` · <span style="color:var(--amber)">${pends} pendiente(s)</span>`:""}
+        ${recs>0?` · <span style="color:var(--red)">${recs} reclamo(s)</span>`:""}
+        </div>
+      </div><span style="color:var(--text3);font-size:18px">›</span></div></div>`;
+  });
+  document.getElementById("vista-clientes").innerHTML=h;
+}
+
+// ── FICHA CLIENTE ────────────────────────────────────────────────────────────
+function renderFicha(){
+  const c=cl();
+  if(!c){volverDesde();return;}
+  const dv=dd(c["Próxima Visita"]);
+  const vBadge=dv===null?"":dv<0?`<span class="badge b-red">Visita vencida ${Math.abs(dv)}d</span>`:dv===0?`<span class="badge b-amber">Hoy</span>`:dv<=5?`<span class="badge b-green">en ${dv}d</span>`:"";
+  const tipoCls={Activo:"b-green",Caído:"b-red",Potencial:"b-blue"}[c["Tipo Cliente"]]||"b-gray";
+
+  let h=`<div class="cl-header">
+    <div class="row-flex">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="cl-name">${c["Nombre Empresa"]}</span>
+          <span class="badge ${tipoCls}">${c["Tipo Cliente"]}</span>
+          ${vBadge}
+        </div>
+        <div class="cl-meta">
+          ${c["Contacto Principal"]?`<span>${c["Contacto Principal"]}${c["Cargo"]?" · "+c["Cargo"]:""}</span>`:""}
+          ${c["Teléfono"]?`<span>${c["Teléfono"]}</span>`:""}
+          ${c["Email"]?`<span>${c["Email"]}</span>`:""}
+          ${c["Forma de Pago"]?`<span>Pago: ${c["Forma de Pago"]}</span>`:""}
+          ${c["Condición Pago"]?`<span>${c["Condición Pago"]}</span>`:""}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="abrirModal('cliente',${clienteActivo})">Editar</button>
+        <button class="btn btn-sm" onclick="volverDesde()">← Volver</button>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    ${["resumen","interacciones","reclamos","cobranza","pendientes"].map(t=>`<button class="tab ${tabFicha===t?"active":""}" onclick="switchTab('${t}')">${{resumen:"Resumen",interacciones:"Interacciones",reclamos:"Reclamos / NC",cobranza:"Cobranza",pendientes:"Pendientes"}[t]}</button>`).join("")}
+  </div>`;
+
+  if(tabFicha==="resumen") h+=renderResumen(c);
+  else if(tabFicha==="interacciones") h+=renderInteracciones(c);
+  else if(tabFicha==="reclamos") h+=renderReclamos(c);
+  else if(tabFicha==="cobranza") h+=renderCobranza(c);
+  else if(tabFicha==="pendientes") h+=renderPendientes(c);
+
+  document.getElementById("vista-ficha").innerHTML=h;
+}
+
+function switchTab(t){ tabFicha=t; renderFicha(); }
+
+function renderResumen(c){
+  const ints=DB.interacciones.filter(i=>i["Nombre Cliente"]===c["Nombre Empresa"]);
+  const ult=ints.length?ints[ints.length-1]:null;
+  const pends=DB.pendientes.filter(p=>p["Nombre Cliente"]===c["Nombre Empresa"]&&p["Estado"]==="Pendiente");
+  const cobPend=DB.cobranza.filter(a=>a["Nombre Cliente"]===c["Nombre Empresa"]&&a["Estado"]==="Pendiente");
+  const recs=DB.reclamos.filter(r=>r["Nombre Cliente"]===c["Nombre Empresa"]&&r["Estado"]!=="Cerrado");
+  const saldo=DB.cobranza.find(a=>a["Nombre Cliente"]===c["Nombre Empresa"]&&a["Saldo Total ($)"]);
+
+  let h=`<div class="metrics-grid" style="margin-bottom:16px">
+    <div class="metric-card"><div class="metric-val">${ints.length}</div><div class="metric-label">Interacciones</div></div>
+    <div class="metric-card"><div class="metric-val">${recs.length}</div><div class="metric-label">Reclamos abiertos</div></div>
+    <div class="metric-card"><div class="metric-val">${pends.length}</div><div class="metric-label">Pendientes</div></div>
+    <div class="metric-card"><div class="metric-val">${saldo?clp(saldo["Saldo Total ($)"]):"—"}</div><div class="metric-label">Saldo deuda</div></div>
+  </div>
+  <div class="grid2" style="gap:12px">
+  <div>
+    <div class="sec">Última interacción</div>`;
+  if(ult){
+    h+=`<div class="card"><div style="font-size:12px;color:var(--text3)">${fp(ult["Fecha"])} · ${ult["Tipo"]}</div>
+    <div style="margin-top:8px;font-size:13px;line-height:1.6">${ult["Resumen"]||"Sin resumen."}</div>
+    ${ult["Problema Detectado"]?`<div style="margin-top:8px;font-size:12px"><span class="badge b-red">Problema</span> <span style="color:var(--text2)">${ult["Problema Detectado"]}</span></div>`:""}
+    ${ult["Oportunidad Detectada"]?`<div style="margin-top:4px;font-size:12px"><span class="badge b-green">Oportunidad</span> <span style="color:var(--text2)">${ult["Oportunidad Detectada"]}</span></div>`:""}
+    ${ult["Compromiso Adquirido"]?`<div style="margin-top:4px;font-size:12px"><span class="badge b-blue">Compromiso</span> <span style="color:var(--text2)">${ult["Compromiso Adquirido"]}</span></div>`:""}
+    </div>`;
+    if(ult["Próximo Paso"]){
+      const dp=dd(ult["Fecha Compromiso"]);
+      const cls=dp!==null&&dp<0?"b-red":dp===0?"b-amber":"b-blue";
+      h+=`<div class="card" style="border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:0">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">PRÓXIMO PASO</div>
+        <div style="font-weight:600">${ult["Próximo Paso"]}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">${ult["Responsable"]} · ${fp(ult["Fecha Compromiso"])} · <span class="badge ${cls}">${ult["Prioridad"]}</span></div>
+      </div>`;
+    }
+  } else {
+    h+=`<div class="card"><div class="empty">Sin interacciones. <button class="btn btn-sm" onclick="switchTab('interacciones')">Registrar →</button></div></div>`;
+  }
+  h+=`</div><div>
+    <div class="sec">Contexto del cliente</div>
+    <div class="card">
+      <div style="font-size:13px;line-height:1.6">${c["Situación Actual"]||"Sin información."}</div>
+      ${c["Problemas Detectados"]?`<div style="margin-top:8px;font-size:12px"><span class="badge b-red">Problemas</span> <span style="color:var(--text2)">${c["Problemas Detectados"]}</span></div>`:""}
+      ${c["Competencia"]?`<div style="margin-top:4px;font-size:12px"><span class="badge b-purple">Competencia</span> <span style="color:var(--text2)">${c["Competencia"]}</span></div>`:""}
+      ${c["Frenos de Compra"]?`<div style="margin-top:4px;font-size:12px"><span class="badge b-amber">Frenos</span> <span style="color:var(--text2)">${c["Frenos de Compra"]}</span></div>`:""}
+      <div style="margin-top:12px;text-align:right"><button class="btn btn-sm" onclick="abrirModal('cliente',${clienteActivo})">Editar contexto</button></div>
+    </div>`;
+  if(cobPend.length){
+    h+=`<div class="sec" style="color:var(--accent)">Cobranza pendiente</div>`;
+    cobPend.forEach(a=>{
+      const da=dd(a["Fecha"]);
+      const cls=da!==null&&da<0?"b-red":da===0?"b-amber":"b-blue";
+      h+=`<div class="card card-sm row-flex" style="margin-bottom:8px"><div><span class="badge ${cls}" style="margin-right:8px">${a["Tipo de Acción"]}</span><span style="font-size:12px;color:var(--text2)">${a["Detalle"]||""}</span></div></div>`;
+    });
+  }
+  h+=`</div></div>`;
+  return h;
+}
+
+function renderInteracciones(c){
+  const lista=DB.interacciones.filter(i=>i["Nombre Cliente"]===c["Nombre Empresa"]).reverse();
+  let h=`<div class="row-flex" style="margin-bottom:16px"><div class="sec" style="margin:0">Historial de interacciones</div>
+    <button class="btn btn-primary btn-sm" onclick="abrirModal('interaccion',null)">+ Registrar</button></div>`;
+  if(!lista.length) return h+`<div class="card"><div class="empty">Sin interacciones registradas.</div></div>`;
+  h+=lista.map(v=>{
+    const pp=v["Próximo Paso"];
+    return `<div class="card"><div class="row-flex"><div>
+      <span style="font-weight:600">${fp(v["Fecha"])}</span>
+      <span class="badge b-gray" style="margin-left:8px">${v["Tipo"]}</span>
+    </div></div>
+    <div style="margin-top:10px;font-size:13px;line-height:1.6">${v["Resumen"]||"Sin resumen."}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${v["Problema Detectado"]?`<div style="font-size:12px"><span class="badge b-red">Problema</span> <span style="color:var(--text2)">${v["Problema Detectado"]}</span></div>`:""}
+      ${v["Oportunidad Detectada"]?`<div style="font-size:12px"><span class="badge b-green">Oportunidad</span> <span style="color:var(--text2)">${v["Oportunidad Detectada"]}</span></div>`:""}
+      ${v["Compromiso Adquirido"]?`<div style="font-size:12px"><span class="badge b-blue">Compromiso</span> <span style="color:var(--text2)">${v["Compromiso Adquirido"]}</span></div>`:""}
+    </div>
+    ${pp?`<div style="margin-top:10px;background:var(--accent-bg);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px">
+      <span style="font-weight:600">Próximo paso:</span> ${pp} · ${v["Responsable"]} · ${fp(v["Fecha Compromiso"])}
+      <span class="badge b-blue" style="margin-left:6px">${v["Prioridad"]}</span></div>`:""}
+    </div>`;
+  }).join("");
+  return h;
+}
+
+function renderReclamos(c){
+  const lista=DB.reclamos.filter(r=>r["Nombre Cliente"]===c["Nombre Empresa"]).reverse();
+  let h=`<div style="text-align:right;margin-bottom:16px"><button class="btn btn-primary btn-sm" onclick="abrirModal('reclamo',null)">+ Nuevo reclamo</button></div>`;
+  if(!lista.length) return h+`<div class="card"><div class="empty">Sin reclamos.</div></div>`;
+  h+=lista.map(r=>{
+    const stCls={Pendiente:"b-amber","En gestión":"b-blue","NC emitida":"b-purple","Cerrado":"b-green"}[r["Estado"]]||"b-gray";
+    return `<div class="card"><div class="row-flex">
+      <div><span style="font-weight:600">${fp(r["Fecha Reclamo"])}</span>
+        <span class="badge b-red" style="margin-left:8px">${r["Tipo"]}</span>
+        <span class="badge ${stCls}" style="margin-left:4px">${r["Estado"]}</span>
+      </div>
+      <button class="btn btn-sm" onclick="abrirModal('reclamo','${r["ID Reclamo"]}')">Editar</button>
+    </div>
+    <div style="margin-top:10px;font-size:13px">${r["Descripción"]}</div>
+    ${r["N° NC"]||r["Monto NC ($)"]?`<div style="margin-top:6px;font-size:12px;color:var(--text3)">NC: ${r["N° NC"]||"—"} · ${r["Monto NC ($)"]?clp(r["Monto NC ($)"]):""}</div>`:""}
+    ${r["Seguimiento / Observaciones"]?`<div style="margin-top:6px;font-size:12px;font-style:italic;color:var(--text2)">${r["Seguimiento / Observaciones"]}</div>`:""}
+    </div>`;
+  }).join("");
+  return h;
+}
+
+function renderCobranza(c){
+  const ACCIONES=["Enviar estado de cuenta","Revisar cuenta","NC pendiente","Retiro de cheques","Confirmar transferencia","Cliente en riesgo de bloqueo","Evaluar bloqueo","Cambiar vigencia","Cliente bloqueado"];
+  const acciones=DB.cobranza.filter(a=>a["Nombre Cliente"]===c["Nombre Empresa"]);
+  const cheques=DB.cheques.filter(ch=>ch["Nombre Cliente"]===c["Nombre Empresa"]);
+  const saldoReg=acciones.find(a=>a["Saldo Total ($)"]);
+
+  let h=`<div class="grid2" style="gap:12px;margin-bottom:16px">
+    <div class="metric-card"><div class="metric-val">${saldoReg?clp(saldoReg["Saldo Total ($)"]):"—"}</div><div class="metric-label">Saldo · ${saldoReg?fp(saldoReg["Saldo Actualizado al"]):"no registrado"}</div></div>
+    <div class="metric-card"><div class="metric-val">${cheques.filter(ch=>ch["Estado"]==="Por retirar").length}</div><div class="metric-label">Cheques por retirar</div></div>
+  </div>
+  <div class="sec">Nueva acción de cobranza</div>
+  <div class="chips">${ACCIONES.map(a=>`<button class="chip" onclick="abrirModal('accion',null,'${a}')">${a}</button>`).join("")}</div>
+  <div class="sec">Acciones pendientes</div>`;
+
+  const pend=acciones.filter(a=>a["Estado"]==="Pendiente");
+  if(pend.length){
+    h+=`<table class="tbl"><thead><tr><th>Acción</th><th>Detalle</th><th>Fecha</th><th></th></tr></thead><tbody>`;
+    pend.forEach(a=>{
+      const da=dd(a["Fecha"]);
+      const cls=da!==null&&da<0?"b-red":da===0?"b-amber":"b-blue";
+      h+=`<tr><td><span class="badge ${cls}">${a["Tipo de Acción"]}</span></td><td style="color:var(--text2)">${a["Detalle"]||"—"}</td><td>${fp(a["Fecha"])}</td>
+        <td><button class="btn btn-sm" onclick="marcarAccionHecha('${a["ID Acción"]}')">✓</button></td></tr>`;
+    });
+    h+=`</tbody></table>`;
+  } else { h+=`<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin acciones pendientes.</div>`; }
+
+  h+=`<div class="sec row-flex"><span>Cheques</span><button class="btn btn-sm" onclick="abrirModal('cheque',null)">+ Cheque</button></div>`;
+  if(cheques.length){
+    h+=`<table class="tbl"><thead><tr><th>N°</th><th>Banco</th><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>`;
+    cheques.forEach(ch=>{
+      const dc=dd(ch["Fecha Retiro"]);
+      const cls=ch["Estado"]==="Retirado"?"b-green":dc!==null&&dc<=2?"b-amber":"b-blue";
+      h+=`<tr><td>${ch["N° Cheque"]}</td><td>${ch["Banco"]}</td><td>${fp(ch["Fecha Retiro"])}</td><td>${clp(ch["Monto ($)"])}</td>
+        <td><span class="badge ${cls}">${ch["Estado"]}</span></td>
+        <td>${ch["Estado"]==="Por retirar"?`<button class="btn btn-sm" onclick="marcarChequeRetirado('${ch["ID Cheque"]}')">✓ Retirado</button>`:""}</td></tr>`;
+    });
+    h+=`</tbody></table>`;
+  } else { h+=`<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin cheques.</div>`; }
+
+  h+=`<div style="margin-top:16px"><button class="btn btn-sm" onclick="abrirModal('saldo',null)">Actualizar saldo</button></div>`;
+  return h;
+}
+
+function renderPendientes(c){
+  const pends=DB.pendientes.filter(p=>p["Nombre Cliente"]===c["Nombre Empresa"]);
+  const ab=pends.filter(p=>p["Estado"]==="Pendiente");
+  const res=pends.filter(p=>p["Estado"]==="Resuelto");
+  let h=`<div style="text-align:right;margin-bottom:16px"><button class="btn btn-primary btn-sm" onclick="abrirModal('pendiente',null)">+ Pendiente</button></div>`;
+  if(!pends.length) return h+`<div class="card"><div class="empty">Sin pendientes.</div></div>`;
+  if(ab.length){
+    h+=`<div class="sec">Abiertos (${ab.length})</div>`;
+    h+=ab.map(p=>{
+      const dp=dd(p["Fecha Límite"]);
+      const cls=dp!==null&&dp<0?"b-red":dp===0?"b-amber":"b-gray";
+      const priCls={Alta:"b-red",Media:"b-amber",Baja:"b-gray"}[p["Prioridad"]]||"b-gray";
+      return `<div class="card card-sm row-flex" style="margin-bottom:8px">
+        <div style="flex:1"><div style="font-weight:600;font-size:13px">${p["Descripción"]}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">${p["Origen"]} · ${fp(p["Fecha Límite"])} · <span class="badge ${priCls}">${p["Prioridad"]}</span></div></div>
+        <div style="display:flex;gap:6px;align-items:center"><span class="badge ${cls}">${dp===null?"—":dp<0?Math.abs(dp)+"d venc.":dp===0?"hoy":"en "+dp+"d"}</span>
+        <button class="btn btn-sm" style="color:var(--green);border-color:#86EFAC" onclick="resolverPendiente('${p["ID Pendiente"]}')">✓</button></div></div>`;
+    }).join("");
+  }
+  if(res.length){
+    h+=`<div class="sec">Resueltos (${res.length})</div>`;
+    h+=res.map(p=>`<div class="card card-sm" style="opacity:.5;margin-bottom:6px"><div style="text-decoration:line-through;font-size:13px">${p["Descripción"]}</div><div style="font-size:12px;color:var(--text3)">${p["Origen"]}</div></div>`).join("");
+  }
+  return h;
+}
+
+// ── ACCIONES ─────────────────────────────────────────────────────────────────
+async function marcarAccionHecha(id){
+  const a=DB.cobranza.find(x=>x["ID Acción"]===id);
+  if(!a) return;
+  a["Estado"]="Hecho";
+  await apiPost("actualizar","cobranza",a,id);
+  renderFicha();
+}
+async function marcarChequeRetirado(id){
+  const ch=DB.cheques.find(x=>x["ID Cheque"]===id);
+  if(!ch) return;
+  ch["Estado"]="Retirado";
+  await apiPost("actualizar","cheques",ch,id);
+  renderFicha();
+}
+async function resolverPendiente(id){
+  const p=DB.pendientes.find(x=>x["ID Pendiente"]===id);
+  if(!p) return;
+  p["Estado"]="Resuelto";
+  await apiPost("actualizar","pendientes",p,id);
+  renderFicha();
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function abrirModal(modo, idx, extra){
+  modoModal=modo; idxModal=idx;
+  const c=clienteActivo!==null?cl():null;
+  let titulo="", body="";
+
+  if(modo==="cliente"){
+    const d=idx!==null?DB.clientes[idx]:{};
+    titulo=idx!==null?"Editar cliente":"Nuevo cliente";
+    body=`<div class="grid2">
+      <div><label>Nombre empresa *</label><input id="mc-nombre" value="${d["Nombre Empresa"]||""}"></div>
+      <div><label>Razón social</label><input id="mc-razon" value="${d["Razón Social"]||""}"></div>
+    </div>
+    <div class="grid3">
+      <div><label>RUT</label><input id="mc-rut" value="${d["RUT"]||""}"></div>
+      <div><label>Zona</label><input id="mc-zona" value="${d["Zona / Ruta"]||""}"></div>
+      <div><label>Tipo cliente</label><select id="mc-tipo"><option ${d["Tipo Cliente"]==="Activo"?"selected":""}>Activo</option><option ${d["Tipo Cliente"]==="Caído"?"selected":""}>Caído</option><option ${d["Tipo Cliente"]==="Potencial"?"selected":""}>Potencial</option></select></div>
+    </div>
+    <div><label>Dirección</label><input id="mc-dir" value="${d["Dirección"]||""}"></div>
+    <div class="grid2">
+      <div><label>Contacto principal</label><input id="mc-contacto" value="${d["Contacto Principal"]||""}"></div>
+      <div><label>Teléfono</label><input id="mc-tel" value="${d["Teléfono"]||""}"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Email</label><input id="mc-email" value="${d["Email"]||""}"></div>
+      <div><label>Nivel relación</label><select id="mc-nivel"><option ${d["Nivel Relación"]==="Alto"?"selected":""}>Alto</option><option ${d["Nivel Relación"]==="Medio"?"selected":""}>Medio</option><option ${d["Nivel Relación"]==="Bajo"?"selected":""}>Bajo</option></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>Forma de pago</label><select id="mc-pago"><option>Cheque</option><option>Transferencia</option><option>Botón de pago</option></select></div>
+      <div><label>Condición pago</label><input id="mc-cond" value="${d["Condición Pago"]||""}" placeholder="Ej: 30 días"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Días de visita</label><input id="mc-dias" value="${d["Días de Visita"]||""}"></div>
+      <div><label>Próxima visita</label><input id="mc-prox" type="date" value="${d["Próxima Visita"]||hoy()}"></div>
+    </div>
+    <div class="sec">Contexto</div>
+    <div><label>Situación actual</label><textarea id="mc-sit">${d["Situación Actual"]||""}</textarea></div>
+    <div><label>Problemas detectados</label><textarea id="mc-prob">${d["Problemas Detectados"]||""}</textarea></div>
+    <div class="grid2">
+      <div><label>Competencia</label><input id="mc-comp" value="${d["Competencia"]||""}"></div>
+      <div><label>Frenos de compra</label><input id="mc-fren" value="${d["Frenos de Compra"]||""}"></div>
+    </div>`;
+  }
+
+  else if(modo==="interaccion"){
+    titulo="Registrar interacción";
+    body=`<div class="grid2">
+      <div><label>Fecha</label><input id="mv-fecha" type="date" value="${hoy()}"></div>
+      <div><label>Tipo</label><select id="mv-tipo"><option>Visita</option><option>Llamada</option><option>WhatsApp</option><option>Correo</option></select></div>
+    </div>
+    <div><label>Resumen *</label><textarea id="mv-resumen"></textarea></div>
+    <div><label>Problema detectado</label><input id="mv-prob" placeholder="Ej: Queja por demora en despacho"></div>
+    <div><label>Oportunidad detectada</label><input id="mv-opor" placeholder="Ej: Interés en nueva línea"></div>
+    <div><label>Compromiso adquirido</label><input id="mv-comp" placeholder="Ej: Enviar cotización el viernes"></div>
+    <div class="sec">Próximo paso</div>
+    <div><label>Acción a realizar *</label><input id="mv-accion"></div>
+    <div class="grid3">
+      <div><label>Responsable</label><input id="mv-resp" value="Yo"></div>
+      <div><label>Fecha compromiso</label><input id="mv-ppfecha" type="date"></div>
+      <div><label>Prioridad</label><select id="mv-prio"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+    </div>
+    <div><label>Actualizar próxima visita</label><input id="mv-prox" type="date" value="${c?.["Próxima Visita"]||""}"></div>`;
+  }
+
+  else if(modo==="reclamo"){
+    const r=idx?DB.reclamos.find(x=>x["ID Reclamo"]===idx):{};
+    titulo=idx?"Editar reclamo":"Nuevo reclamo";
+    body=`<div class="grid2">
+      <div><label>Fecha</label><input id="mr-fecha" type="date" value="${r?.["Fecha Reclamo"]||hoy()}"></div>
+      <div><label>Tipo</label><select id="mr-tipo"><option>Faltante</option><option>Devolución</option><option>Producto dañado</option><option>Error de precio</option><option>Otro</option></select></div>
+    </div>
+    <div><label>Descripción *</label><textarea id="mr-desc">${r?.["Descripción"]||""}</textarea></div>
+    <div class="grid2">
+      <div><label>Estado</label><select id="mr-est"><option>Pendiente</option><option>En gestión</option><option>NC emitida</option><option>Cerrado</option></select></div>
+      <div><label>N° NC</label><input id="mr-ncnum" value="${r?.["N° NC"]||""}" placeholder="NC-0001"></div>
+    </div>
+    <div><label>Monto NC ($)</label><input id="mr-ncmonto" type="number" value="${r?.["Monto NC ($)"]||""}"></div>
+    <div><label>Seguimiento / observaciones</label><textarea id="mr-seg">${r?.["Seguimiento / Observaciones"]||""}</textarea></div>`;
+  }
+
+  else if(modo==="accion"){
+    titulo="Nueva acción de cobranza";
+    body=`<div><label>Tipo de acción</label><select id="ma-tipo">
+      ${["Enviar estado de cuenta","Revisar cuenta","NC pendiente","Retiro de cheques","Confirmar transferencia","Cliente en riesgo de bloqueo","Evaluar bloqueo","Cambiar vigencia","Cliente bloqueado"].map(a=>`<option ${a===extra?"selected":""}>${a}</option>`).join("")}
+    </select></div>
+    <div><label>Detalle</label><input id="ma-detalle" placeholder="Ej: Cheque N°112 · $980.000"></div>
+    <div><label>Fecha</label><input id="ma-fecha" type="date" value="${hoy()}"></div>`;
+  }
+
+  else if(modo==="cheque"){
+    titulo="Registrar cheque";
+    body=`<div class="grid2">
+      <div><label>N° Cheque</label><input id="mch-num" placeholder="Che-001"></div>
+      <div><label>Banco</label><input id="mch-banco"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Fecha de retiro</label><input id="mch-fecha" type="date" value="${hoy()}"></div>
+      <div><label>Monto ($)</label><input id="mch-monto" type="number"></div>
+    </div>`;
+  }
+
+  else if(modo==="saldo"){
+    titulo="Actualizar saldo";
+    body=`<div><label>Saldo total ($)</label><input id="ms-saldo" type="number"></div>
+    <div><label>Fecha de corte</label><input id="ms-fecha" type="date" value="${hoy()}"></div>`;
+  }
+
+  else if(modo==="pendiente"){
+    titulo="Nuevo pendiente";
+    body=`<div><label>Descripción *</label><input id="mpe-desc"></div>
+    <div class="grid3">
+      <div><label>Fecha límite</label><input id="mpe-fecha" type="date"></div>
+      <div><label>Prioridad</label><select id="mpe-prio"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+      <div><label>Origen</label><input id="mpe-origen" placeholder="Visita, Reclamo..."></div>
+    </div>`;
+  }
+
+  document.getElementById("modal-title").textContent=titulo;
+  document.getElementById("modal-body").innerHTML=body;
+  document.getElementById("modal").classList.add("open");
+}
+
+function cerrarModal(){ document.getElementById("modal").classList.remove("open"); modoModal=null; idxModal=null; }
+
+async function guardarModal(){
+  const c=clienteActivo!==null?cl():null;
+
+  if(modoModal==="cliente"){
+    const nombre=document.getElementById("mc-nombre").value.trim();
+    if(!nombre){alert("El nombre es obligatorio");return;}
+    const datos={
+      "ID Cliente": idxModal!==null?DB.clientes[idxModal]["ID Cliente"]:genId("CLI"),
+      "Nombre Empresa":nombre,
+      "Razón Social":document.getElementById("mc-razon").value.trim(),
+      "RUT":document.getElementById("mc-rut").value.trim(),
+      "Zona / Ruta":document.getElementById("mc-zona").value.trim(),
+      "Tipo Cliente":document.getElementById("mc-tipo").value,
+      "Dirección":document.getElementById("mc-dir").value.trim(),
+      "Contacto Principal":document.getElementById("mc-contacto").value.trim(),
+      "Teléfono":document.getElementById("mc-tel").value.trim(),
+      "Email":document.getElementById("mc-email").value.trim(),
+      "Nivel Relación":document.getElementById("mc-nivel").value,
+      "Forma de Pago":document.getElementById("mc-pago").value,
+      "Condición Pago":document.getElementById("mc-cond").value.trim(),
+      "Días de Visita":document.getElementById("mc-dias").value.trim(),
+      "Próxima Visita":document.getElementById("mc-prox").value,
+      "Situación Actual":document.getElementById("mc-sit").value.trim(),
+      "Problemas Detectados":document.getElementById("mc-prob").value.trim(),
+      "Competencia":document.getElementById("mc-comp").value.trim(),
+      "Frenos de Compra":document.getElementById("mc-fren").value.trim()
+    };
+    if(idxModal!==null){
+      await apiPost("actualizar","clientes",datos,datos["ID Cliente"]);
+      DB.clientes[idxModal]=datos;
+    } else {
+      await apiPost("escribir","clientes",datos);
+      DB.clientes.push(datos);
+    }
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="interaccion"){
+    const resumen=document.getElementById("mv-resumen").value.trim();
+    const accion=document.getElementById("mv-accion").value.trim();
+    if(!resumen){alert("El resumen es obligatorio");return;}
+    const prox=document.getElementById("mv-prox").value;
+    const datos={
+      "ID Interacción":genId("INT"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "Fecha":document.getElementById("mv-fecha").value,
+      "Tipo":document.getElementById("mv-tipo").value,
+      "Resumen":resumen,
+      "Problema Detectado":document.getElementById("mv-prob").value.trim(),
+      "Oportunidad Detectada":document.getElementById("mv-opor").value.trim(),
+      "Compromiso Adquirido":document.getElementById("mv-comp").value.trim(),
+      "Próximo Paso":accion,
+      "Responsable":document.getElementById("mv-resp").value.trim(),
+      "Fecha Compromiso":document.getElementById("mv-ppfecha").value,
+      "Prioridad":document.getElementById("mv-prio").value,
+      "Próxima Visita Agendada":prox
+    };
+    await apiPost("escribir","interacciones",datos);
+    DB.interacciones.push(datos);
+    if(prox){ c["Próxima Visita"]=prox; await apiPost("actualizar","clientes",c,c["ID Cliente"]); }
+    if(accion){
+      const pend={"ID Pendiente":genId("PEN"),"ID Cliente":c["ID Cliente"],"Nombre Cliente":c["Nombre Empresa"],"Descripción":accion,"Fecha Límite":datos["Fecha Compromiso"],"Prioridad":datos["Prioridad"],"Origen":"Interacción "+datos["Fecha"],"Estado":"Pendiente"};
+      await apiPost("escribir","pendientes",pend);
+      DB.pendientes.push(pend);
+    }
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="reclamo"){
+    const desc=document.getElementById("mr-desc").value.trim();
+    if(!desc){alert("La descripción es obligatoria");return;}
+    const datos={
+      "ID Reclamo":idxModal||genId("REC"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "Fecha Reclamo":document.getElementById("mr-fecha").value,
+      "Tipo":document.getElementById("mr-tipo").value,
+      "Descripción":desc,
+      "Estado":document.getElementById("mr-est").value,
+      "N° NC":document.getElementById("mr-ncnum").value.trim(),
+      "Monto NC ($)":document.getElementById("mr-ncmonto").value||"",
+      "Seguimiento / Observaciones":document.getElementById("mr-seg").value.trim()
+    };
+    if(idxModal){ await apiPost("actualizar","reclamos",datos,idxModal); const ri=DB.reclamos.findIndex(r=>r["ID Reclamo"]===idxModal); if(ri>=0) DB.reclamos[ri]=datos; }
+    else { await apiPost("escribir","reclamos",datos); DB.reclamos.push(datos); }
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="accion"){
+    const datos={
+      "ID Acción":genId("COB"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "Tipo de Acción":document.getElementById("ma-tipo").value,
+      "Detalle":document.getElementById("ma-detalle").value.trim(),
+      "Fecha":document.getElementById("ma-fecha").value,
+      "Estado":"Pendiente"
+    };
+    await apiPost("escribir","cobranza",datos);
+    DB.cobranza.push(datos);
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="cheque"){
+    const datos={
+      "ID Cheque":genId("CHQ"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "N° Cheque":document.getElementById("mch-num").value.trim(),
+      "Banco":document.getElementById("mch-banco").value.trim(),
+      "Fecha Retiro":document.getElementById("mch-fecha").value,
+      "Monto ($)":document.getElementById("mch-monto").value||"",
+      "Estado":"Por retirar"
+    };
+    await apiPost("escribir","cheques",datos);
+    DB.cheques.push(datos);
+    const cob={"ID Acción":genId("COB"),"ID Cliente":c["ID Cliente"],"Nombre Cliente":c["Nombre Empresa"],"Tipo de Acción":"Retiro de cheques","Detalle":datos["N° Cheque"]+" · "+clp(datos["Monto ($)"])+" · "+datos["Banco"],"Fecha":datos["Fecha Retiro"],"Estado":"Pendiente"};
+    await apiPost("escribir","cobranza",cob);
+    DB.cobranza.push(cob);
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="saldo"){
+    const datos={
+      "ID Acción":genId("COB"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "Tipo de Acción":"Revisar cuenta",
+      "Detalle":"Actualización saldo",
+      "Fecha":document.getElementById("ms-fecha").value,
+      "Estado":"Hecho",
+      "Saldo Total ($)":document.getElementById("ms-saldo").value||"",
+      "Saldo Actualizado al":document.getElementById("ms-fecha").value
+    };
+    await apiPost("escribir","cobranza",datos);
+    DB.cobranza.push(datos);
+    cerrarModal(); renderFicha();
+    return;
+  }
+
+  if(modoModal==="pendiente"){
+    const desc=document.getElementById("mpe-desc").value.trim();
+    if(!desc){alert("La descripción es obligatoria");return;}
+    const datos={
+      "ID Pendiente":genId("PEN"),
+      "ID Cliente":c["ID Cliente"],
+      "Nombre Cliente":c["Nombre Empresa"],
+      "Descripción":desc,
+      "Fecha Límite":document.getElementById("mpe-fecha").value,
+      "Prioridad":document.getElementById("mpe-prio").value,
+      "Origen":document.getElementById("mpe-origen").value.trim(),
+      "Estado":"Pendiente"
+    };
+    await apiPost("escribir","pendientes",datos);
+    DB.pendientes.push(datos);
+    cerrarModal(); renderFicha();
+    return;
+  }
+}
+
+// ── INICIO ───────────────────────────────────────────────────────────────────
+sincronizar();
+</script>
+</body>
+</html>
