@@ -1,29 +1,49 @@
-export default async function handler(req, res) {
+const GAS = 'https://script.google.com/macros/s/AKfycbwSqIjKfTHeN-NPORLCxl2cdhdA7Z6aM7coNxQUBVjIfURJPbQ-x8NAyf2eIaq0WLXzoA/exec';
+
+module.exports = async function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSqIjKfTHeN-NPORLCxl2cdhdA7Z6aM7coNxQUBVjIfURJPbQ-x8NAyf2eIaq0WLXzoA/exec';
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    let response;
+    let gasRes;
     if (req.method === 'GET') {
-      const params = new URLSearchParams(req.query).toString();
-      response = await fetch(`${GAS_URL}?${params}`);
+      const q = new URLSearchParams(req.query).toString();
+      gasRes = await fetch(`${GAS}?${q}`, {
+        redirect: 'follow',
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'application/json, text/plain, */*'
+        }
+      });
     } else {
-      response = await fetch(GAS_URL, {
+      gasRes = await fetch(GAS, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req.body),
+        redirect: 'follow',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'application/json, text/plain, */*'
+        },
+        body: JSON.stringify(req.body)
       });
     }
-    const data = await response.json();
-    return res.status(200).json(data);
+
+    const text = await gasRes.text();
+
+    try {
+      const json = JSON.parse(text);
+      return res.status(200).json(json);
+    } catch(e) {
+      return res.status(200).json({
+        error: 'GAS no devolvió JSON',
+        status: gasRes.status,
+        url: gasRes.url,
+        preview: text.substring(0, 300)
+      });
+    }
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-}
+};
